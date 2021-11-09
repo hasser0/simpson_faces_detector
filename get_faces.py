@@ -107,10 +107,11 @@ while cap.isOpened():
             # If white box contained in yellow box
             if w_x1 >= y_x1 and w_x2 <= y_x2 and y_y1 <= w_y1 and y_y2 >= w_y2:
                 n_white_boxes +=1
-        if n_white_boxes <= 2 and n_white_boxes >= 1:
+        if n_white_boxes == 2:
             faces.append(yellow_box)
     for face in faces:
         x,y,w,h,a = face
         cropped_image = image[y:y+h,x:x+w]
         cropped_image = cv2.resize(cropped_image, output_size)
-        cv2.imwrite(output_dir + 'image')
+        cv2.imwrite(output_dir + video_name + f'_{frame_num}.png', cropped_image)
+    print(f"Frame {frame_num} finished: {len(faces)} faces found")
