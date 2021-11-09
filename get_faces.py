@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 ############################################################
 AREA = 4
 output_size = (254,254)
-output_dir = './simpson_faces/'
-video_name = 'sample.mp4'
 r = 1 # radius for black filter
+h_padd = 15
+w_padd = 15
 lower_area_white = 50
 upper_area_white = 40000
 lower_area_yellow = 100
@@ -19,8 +19,9 @@ k_size_color = 9
 connect = 4
 sensitivity_white = 50
 sensitivity_black = 100
-PATH = '/home/hasser/semestre_7/model_gener/Simpsons-Face-Detector/'
+PATH = '/home/hasser/semestre_7/model_gener/simpsons_face_detector/'
 PATH_TO_VIDEOS = PATH + 'videos/'
+output_dir = './simpson_faces/'
 #YELLOW BOUNDS
 lower_yellow = np.array([22, 93, 0], dtype="uint16")
 upper_yellow = np.array([45, 255, 255], dtype="uint16")
@@ -55,7 +56,6 @@ for video_name in os.listdir(PATH_TO_VIDEOS):
         mask_black = cv2.inRange(hsv, lower_black, upper_black)
         mask_black_copy = mask_black.copy()
         height, width = mask_black_copy.shape
-        
         for i in range(height):
             for j in range(width):
                 try:
@@ -79,19 +79,22 @@ for video_name in os.listdir(PATH_TO_VIDEOS):
         white_minus_black = np.where(mask_black==255, 0, blurred_white)
         n_white_comp, white_masks, white_stats, white_centroids = cv2.connectedComponentsWithStats(white_minus_black, connectivity=connect)
         n_yellow_comp, yellow_masks, yellow_stats, yellow_centroids = cv2.connectedComponentsWithStats(yellow_minus_black, connectivity=connect)
+        if n_white_comp == 0 or n_yellow_comp == 0:
+            continue
         ############################################################
         ###############   FILTER COMPONENTS BY AREA   ##############
         ############################################################
         white_indexes = [comp_index for comp_index in range(n_white_comp)
                         if white_stats[comp_index, AREA] >= lower_area_white and 
                         white_stats[comp_index, AREA] <= upper_area_white]
-        white_comp_filt = np.where(white_masks==white_indexes[0], 255, 0)
-        for index in white_indexes[1:]:
-            white_comp_filt += np.where(white_masks==index, 255, 0)
-        #YELLOW
         yellow_indexes = [comp_index for comp_index in range(n_yellow_comp)
                         if yellow_stats[comp_index, AREA] >= lower_area_yellow and 
                         yellow_stats[comp_index, AREA] <= upper_area_yellow]
+        if len(white_indexes) == 0 or len(yellow_indexes) == 0:
+            continue
+        white_comp_filt = np.where(white_masks==white_indexes[0], 255, 0)
+        for index in white_indexes[1:]:
+            white_comp_filt += np.where(white_masks==index, 255, 0)
         yellow_comp_filt = np.where(yellow_masks==yellow_indexes[0], 255, 0)
         for index in yellow_indexes[1:]:
             yellow_comp_filt += np.where(yellow_masks==index, 255, 0)
@@ -111,9 +114,14 @@ for video_name in os.listdir(PATH_TO_VIDEOS):
                     n_white_boxes +=1
             if n_white_boxes == 2:
                 faces.append(yellow_box)
+
         for face in faces:
             x,y,w,h,a = face
-            cropped_image = image[y:y+h,x:x+w]
-            cropped_image = cv2.resize(cropped_image, output_size)
-            cv2.imwrite(output_dir + video_name + f'_{frame_num}.png', cropped_image)
+            try:
+                cropped_image = image[y-h_padd : y+h+h_padd, x-w_padd : x+w+w_padd]
+            except IndexError:
+                cropped_image = image[y:y+h,x:x+w]
+            finally:
+                cropped_image = cv2.resize(cropped_image, output_size)
+                cv2.imwrite(output_dir + video_name + f'_{frame_num}.png', cropped_image)
         print(f"Frame {frame_num} finished: {len(faces)} faces found")
