@@ -23,6 +23,8 @@ PATH = '/home/hasser/semestre_7/model_gener/simpsons_face_detector/'
 PATH_TO_VIDEOS = PATH + 'videos/'
 output_dir = './simpson_faces/'
 #YELLOW BOUNDS
+lower_yellow = np.array([22, 150, 120], dtype="uint16")
+upper_yellow = np.array([50, 255, 255], dtype="uint16")
 lower_yellow = np.array([22, 93, 0], dtype="uint16")
 upper_yellow = np.array([45, 255, 255], dtype="uint16")
 #WHITE BOUNDS
