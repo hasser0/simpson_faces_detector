@@ -2,3 +2,9 @@
 simpson_faces/*
 venv/
 sample/*
+.ipynb_checkpoints/*
+faces_254_254/*
+sample_images/*
+boxes/*
+faces/*
+scenes/*
